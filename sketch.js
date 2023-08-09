@@ -76,14 +76,14 @@ $fx.params([
   },
 ])
 
-coilComplex = randomVal(0.03, 0.2)//$fx.getParam("coilComplex")
-leafWid = 300//randomVal(100, 500)
+coilComplex = 0.03//randomVal(0.03, 0.2)//$fx.getParam("coilComplex")
+leafWid = randomVal(100, 500)
 widFreq = randomInt(1, 20)
 widExpo = randomVal(0.25, 4)
 contained = randBool()
 wigglePhase = randomVal(1, 3)
 loopDens = 2000
-padding = 2//randomVal(1, 3)
+padding = 1//randomVal(1, 3)
 
 if(contained == false) {
   containMod = 1.5
