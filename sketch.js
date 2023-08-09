@@ -76,13 +76,13 @@ $fx.params([
   },
 ])
 
-coilComplex = randomVal(0.03, 0.2)//$fx.getParam("coilComplex")
+coilComplex = 0.03//randomVal(0.03, 0.2)//$fx.getParam("coilComplex")
 leafWid = randomVal(100, 500)
 widFreq = randomInt(1, 20)
 widExpo = randomVal(0.25, 4)
 contained = randBool()
 wigglePhase = randomVal(1, 3)
-loopDens = 1000
+loopDens = 2000
 padding = 1//randomVal(1, 3)
 
 if(contained == false) {
@@ -97,6 +97,8 @@ phaseXStart = randomVal(0, 100000000000)
 phaseYStart = randomVal(0, 100000000000)
 phaseWigStart = randomVal(0, 100000000000)
 
+thickness = leafWid/2
+
 function setup() {
   
   pixelDensity(pxSize)
@@ -110,24 +112,29 @@ function setup() {
   
   c = createGraphics(w, h)
   angleMode(DEGREES)
-  noLoop()
+  // noLoop()
 }
 
 function draw() {
   
+ if(frameCount == 1) { 
   noiseSeed(randomVal(0, 1000000000000000))
   blendMode(MULTIPLY)
   c.background(255)
   background(250)
   noFill()
+}
 
   //Sketch
-  setPen(black)
-  loopWisp(leafWid)
-  setPen(flameRed)
-  loopWisp(leafWid*0.9)
-  setPen(rowneyBlue)
-  loopWisp(leafWid*0.8)
+  if(frameCount < thickness) {
+    setPen(black)
+    loopWisp(leafWid)
+  }
+  
+  // setPen(flameRed)
+  // loopWisp(leafWid*0.9)
+  // setPen(rowneyBlue)
+  // loopWisp(leafWid*0.8)
  
 
 }
