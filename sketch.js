@@ -76,7 +76,7 @@ $fx.params([
   },
 ])
 
-coilComplex = 0.03//randomVal(0.03, 0.2)//$fx.getParam("coilComplex")
+coilComplex = randomVal(0.03, 0.2)//$fx.getParam("coilComplex")
 leafWid = randomVal(100, 500)
 widFreq = randomInt(1, 20)
 widExpo = randomVal(0.25, 4)
