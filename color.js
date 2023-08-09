@@ -67,14 +67,9 @@ burntUmber = {
 black = {
   'hex': '#000000',
   'name': 'Black',
-  'sz': 0.35,
+  'sz': 0.5,
 }
 
-lavender = {
-  'hex': '#9783ce',
-  'name': 'Lavender',
-  'sz': 0.8,
-}
 
 
 allInks = [

@@ -1,3 +1,4 @@
+
 function randomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
@@ -238,136 +239,129 @@ function setStrokeMM(mm) {
   strokeWeight(weightNow)
 }
 
+function randBool() {
+  if(fxrand() < 0.5) {
+    bool = true
+  } else {
+    bool = false
+  }
+  return bool
+}
+
 function setPen(pen) {
-  stroke(pen.hex)
+  penNow = pen
+  stroke(chroma(pen.hex).alpha(1).hex())
   mmWt = mmToPx(pen.sz)
   strokeWeight(mmWt)
+  slinkyGap = mmWt*0.75
 }
 ////////////////////////////////////////
 
-function dashLine(xA, yA, xB, yB, phase) {
-  here = createVector(xA, yA)
-  there = createVector(xB, yB)
-  length = distBetween(here.x, here.y, there.x, there.y)
-  ns = randomVal(0.05, 0.005)
-  drawing = false
-  for(let i = 0; i < length; i++) {
-    n = noise(i*ns, phase)
-    if(n > 0.5 && drawing == false) {
-      xNow = map(i, 0, length, here.x, there.x)
-      yNow = map(i, 0, length, here.y, there.y)
-      drawing = true 
-      // vertA = createVector(xNow, yNow)
-      beginShape()
-      vertex(xNow, yNow)
-    } else if(n < 0.75 && drawing == true) {
-      xNow = map(i, 0, length, here.x, there.x)
-      yNow = map(i, 0, length, here.y, there.y)
-      drawing = false 
-      // beginShape()
-      // vertex(vertA.x, vertA.y)
-      vertex(xNow, yNow)
-      endShape()
-    }
-
-    if(i == length) {
-      endShape()
-    }
-  }
-}
-
-function wiggleLine(xA, yA, xB, yB, weight) {
-  noFill()
-  strokeWeight(mmWt)
-  startAng = 180//randomVal(0, 360)
-  here = createVector(xA, yA)
-  there = createVector(xB, yB)
-  length = distBetween(here.x, here.y, there.x, there.y)
-  ang = angBetween(here.x, here.y, there.x, there.y)
-  freq = length/2
-  beginShape()
-  for(let i = 0; i < length; i++) {
-    iNormal = map(i, 0, length, 0, 360)
-    off = map(cos(iNormal*freq), -1, 1, -weight/2, weight/2)
-    xNow = map(i, 0, length, here.x, there.x)
-    yNow = map(i, 0, length, here.y, there.y)
-    now = ptFromAng(xNow, yNow, ang+90, off)
-    vertex(now.x, now.y)
-  }
-  endShape()
-}
-
-function dashWiggleLine(xA, yA, xB, yB, weight) {
-  noFill()
-  strokeWeight(mmWt)
-  startAng = randomVal(0, 360)
-  here = createVector(xA, yA)
-  there = createVector(xB, yB)
-  length = distBetween(here.x, here.y, there.x, there.y)
-  ang = angBetween(here.x, here.y, there.x, there.y)
+function loopWisp(wt) {
+  // setPen(plotPal[randomInt(0, plotPal.length-1)])
+  dens = loopDens//2000
+  startAng = startAng//randomVal(0, 360)
+  pts = []
+  nWigs = []
+  maxX = 0
+  minX = 1
+  maxY = 0
+  minY = 1
+  minWig = 1
+  maxWig = 0
+  ns = coilComplex
   
-  freq = length/2
-  dashFreq = randomVal(2, 40)
-  // beginShape()
-  inc = length/(dashFreq/2)
-  drawing = false
-  numCounter = 0
-  for(let i = 0; i < length; i+=mmWt/2) {
-    numCounter++
-    iNormal = map(i, 0, length, 0, 360)
-    n = sin(iNormal*dashFreq)//noise(i*ns, phase)
-    
-    if(n < 0.0 && drawing == false) {
-      drawing = true 
-      beginShape()
-    } else if(n < 0.0) {
+  rotNS = 3
+  
+  nsWig = 1
+  phaseY = phaseYStart
+  phaseX = phaseXStart
+  phaseWig = phaseWigStart
+  thickness = wt/2
+  phaseTotal = wigglePhase//2
+  phaseInc = phaseTotal/thickness
+  
+  freq = widFreq//randomInt(1, 15)
+  c.strokeWeight(mmWt*padding)
+  c.stroke(0)
+  c.strokeCap(SQUARE)
+  
+  
+  
+  for(let j = 0; j < thickness; j++) {
+    phaseWig += phaseInc
+    for(let i = 0; i < dens+3; i++) {
+      sineDens = map(i, 0, dens, startAng, startAng+360)
+      iNormal = map(i, 0, dens, 0, 1)
+      xOff = map(cos(sineDens), -1, 1, 0, 10)
+      yOff = map(sin(sineDens), -1, 1, 0, 10)
+      rot = noise(xOff*rotNS, yOff*rotNS)
+      nX = noise(xOff*ns, yOff*ns, phaseX)
+      nY = noise(xOff*ns, yOff*ns, phaseY)
+      nWig = noise(xOff*nsWig, yOff*nsWig, phaseWig)
       
-      if(numCounter%2 == 0) {
-        off = weight/2
+      if(nX < minX) {
+        minX = nX
+      }
+      if(nX > maxX) {
+        maxX = nX
+      }
+      if(nY < minY) {
+        minY = nY
+      }
+      if(nY > maxY) {
+        maxY = nY
+      }
+      pts[i] = createVector(nX, nY)
+
+      if(nWig < minWig) {
+        minWig = nWig
+      }
+      if(nWig > maxWig) {
+        maxWig = nWig
+      }
+      
+      nWigs[i] = nWig
+    }
+    
+
+    beginShape()
+    for(let i = 0; i < dens+1; i++) {
+      
+      
+      // console.log(nWig)
+      xPos = map(pts[i].x, minX, maxX, marg+wt, w-marg-wt)
+      yPos = map(pts[i].y, minY, maxY, marg+wt, h-marg-wt)
+      xPosNxt = map(pts[i+1].x, minX, maxX, marg+wt, w-marg-wt)
+      yPosNxt = map(pts[i+1].y, minY, maxY, marg+wt, h-marg-wt)
+      iNormal = map(i, 0, dens, 0, 360)
+
+      wigNormal = map(nWigs[i], minWig, maxWig, 0, 1)
+      ang = angBetween(xPos, yPos, xPosNxt, yPosNxt)+90
+      sineFixed = map(sin(iNormal*freq), -1, 1, 0, 1)
+      wid = map(pow(sineFixed, widExpo), 0, pow(1, widExpo), 0, wt)
+      amt = map(wigNormal, 0, 1, wid, -wid)
+      pos = ptFromAng(xPos, yPos, ang, amt*containMod)
+      
+
+      check = c.get(pos.x, pos.y)[0]
+    
+      if(check == 255 && pos.x > marg && pos.x < w-marg && pos.y > marg && pos.y < h-marg) {
+        vertex(pos.x, pos.y)
+        if(i > 1) {
+          c.line(pos.x, pos.y, lastPos.x, lastPos.y)
+        }
+        
       } else {
-        off = -weight/2
+        endShape()
+        beginShape()
       }
-      // off = weight/2//map(cos(iNormal*freq), -1, 1, -weight/2, weight/2)
-      xNow = map(i, 0, length, here.x, there.x)
-      yNow = map(i, 0, length, here.y, there.y)
-      now = ptFromAng(xNow, yNow, ang+90, off)
-      vertex(now.x, now.y)
       
-    } else if( n > 0.0 && drawing == true) {
-      endShape()
-      drawing = false
-    }
+      lastPos = createVector(pos.x, pos.y)
     
-  }
-  // endShape()
-}
-
-function compoundDash(xA, yA, xB, yB, weight, num) {
-  ang = angBetween(xA, yA, xB, yB)
-  for(let i = 0; i < num; i++) {
-    thisWt = map(i, 0, num, weight, weight/num)
-    offMax = (weight-thisWt)/2
-    off = ptFromAng(0, 0, ang+90, randomVal(offMax, -offMax))
-    dashWiggleLine(xA+off.x, yA+off.y, xB+off.x, yB+off.y, thisWt)
-  }
-}
-
-function noiseGrid(cols, phase) {
-  // cols = randomInt(5, 50)
-  rows = Math.round(cols*ratio)
-  cellW = (w-(marg*2))/cols
-  cellH = (h-(marg*2))/rows
-  padding = min([cellW, cellH])*0.2
-  ns = 4
-
-  for(let y = 0; y < rows; y++) {
-    for(let x = 0; x < cols; x++) {
-      xNormal = map(x, 0, cols, 0, 1)
-      yNormal = map(y, 0, rows, 0, 1)
-      n = noise(xNormal*ns, yNormal*ns, phase)
-      if(n > 0.5) {
-        circle(marg+x*cellW+cellW/2, marg+y*cellH+cellH/2, min([cellW, cellH])-padding)
-      }
     }
+    endShape()
   }
+  
+  
 }
