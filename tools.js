@@ -259,7 +259,8 @@ function setPen(pen) {
 
 function loopWisp(wt) {
   // setPen(plotPal[randomInt(0, plotPal.length-1)])
-  dens = loopDens//2000
+  if(frameCount == 1) {
+    dens = loopDens//2000
   startAng = startAng//randomVal(0, 360)
   pts = []
   nWigs = []
@@ -277,7 +278,7 @@ function loopWisp(wt) {
   phaseY = phaseYStart
   phaseX = phaseXStart
   phaseWig = phaseWigStart
-  thickness = wt/2
+  // thickness = wt/2
   phaseTotal = wigglePhase//2
   phaseInc = phaseTotal/thickness
   
@@ -285,10 +286,12 @@ function loopWisp(wt) {
   c.strokeWeight(mmWt*padding)
   c.stroke(0)
   c.strokeCap(SQUARE)
+  }
   
   
   
-  for(let j = 0; j < thickness; j++) {
+  
+  j = frameCount
     phaseWig += phaseInc
     for(let i = 0; i < dens+3; i++) {
       sineDens = map(i, 0, dens, startAng, startAng+360)
@@ -361,7 +364,7 @@ function loopWisp(wt) {
     
     }
     endShape()
-  }
+  
   
   
 }
