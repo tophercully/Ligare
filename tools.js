@@ -55,10 +55,6 @@ function keyTyped() {
     window.history.replaceState('', '', updateURLParameter(window.location.href, "renderType", "1"));
     window.location.reload();
   }
-  if (key === "w" || key === "W") {
-    window.history.replaceState('', '', updateURLParameter(window.location.href, "penSize", "35"));
-    window.location.reload();
-  }
 }
 function updateURLParameter(url, param, paramVal)
 {
@@ -250,18 +246,17 @@ function randBool() {
 
 function setPen(pen) {
   penNow = pen
-  stroke(chroma(pen.hex).alpha(1).hex())
+  stroke(chroma(pen.hex).alpha(pen.alpha).hex())
   mmWt = mmToPx(pen.sz)
   strokeWeight(mmWt)
   slinkyGap = mmWt*0.75
 }
 ////////////////////////////////////////
-
+//leafWidA, widFreqA, widExpoA, coilComplexA, phaseXA, phaseYA, startAngA
 function loopWisp(wt) {
-  // setPen(plotPal[randomInt(0, plotPal.length-1)])
   if(frameCount == 1) {
-    dens = loopDens//2000
-  startAng = startAng//randomVal(0, 360)
+    dens = loopDens
+  startAng = startAng
   pts = []
   nWigs = []
   maxX = 0
@@ -275,8 +270,8 @@ function loopWisp(wt) {
   rotNS = 3
   
   nsWig = 1
-  phaseY = phaseYStart
-  phaseX = phaseXStart
+  phaseY = $fx.getParam('seed')//phaseYStart
+  phaseX = -$fx.getParam('seedB')//phaseXStart
   phaseWig = phaseWigStart
   // thickness = wt/2
   phaseTotal = wigglePhase//2
@@ -286,6 +281,10 @@ function loopWisp(wt) {
   c.strokeWeight(mmWt*padding)
   c.stroke(0)
   c.strokeCap(SQUARE)
+  // c2.strokeWeight(mmWt*c2Padding)
+  
+  c2.stroke(0)
+  c2.strokeCap(SQUARE)
   }
   
   
@@ -327,16 +326,24 @@ function loopWisp(wt) {
       nWigs[i] = nWig
     }
     
-
+    drawing = false
     beginShape()
     for(let i = 0; i < dens+1; i++) {
       
       
       // console.log(nWig)
-      xPos = map(pts[i].x, minX, maxX, marg+wt, w-marg-wt)
-      yPos = map(pts[i].y, minY, maxY, marg+wt, h-marg-wt)
-      xPosNxt = map(pts[i+1].x, minX, maxX, marg+wt, w-marg-wt)
-      yPosNxt = map(pts[i+1].y, minY, maxY, marg+wt, h-marg-wt)
+      if(contained == true) {
+        xPos = map(pts[i].x, minX, maxX, marg+wt, w-marg-wt)
+        yPos = map(pts[i].y, minY, maxY, marg+wt, h-marg-wt)
+        xPosNxt = map(pts[i+1].x, minX, maxX, marg+wt, w-marg-wt)
+        yPosNxt = map(pts[i+1].y, minY, maxY, marg+wt, h-marg-wt)
+      } else {
+        xPos = map(pts[i].x, minX, maxX, marg, w-marg)
+        yPos = map(pts[i].y, minY, maxY, marg, h-marg)
+        xPosNxt = map(pts[i+1].x, minX, maxX, marg, w-marg)
+        yPosNxt = map(pts[i+1].y, minY, maxY, marg, h-marg)
+      }
+      
       iNormal = map(i, 0, dens, 0, 360)
 
       wigNormal = map(nWigs[i], minWig, maxWig, 0, 1)
@@ -347,17 +354,22 @@ function loopWisp(wt) {
       pos = ptFromAng(xPos, yPos, ang, amt*containMod)
       
 
-      check = c.get(pos.x, pos.y)[0]
+      check = c2.get(pos.x, pos.y)[0]
     
-      if(check == 255 && pos.x > marg && pos.x < w-marg && pos.y > marg && pos.y < h-marg) {
+      if(check == 255 && pos.x > marg*2 && pos.x < w-marg*2 && pos.y > marg*2 && pos.y < h-marg*2 && drawing == false) {
+        beginShape()
+        drawing = true
+        
+      } else if(check == 255 && pos.x > marg*2 && pos.x < w-marg*2 && pos.y > marg*2 && pos.y < h-marg*2 && drawing == true) {
         vertex(pos.x, pos.y)
         if(i > 1) {
           c.line(pos.x, pos.y, lastPos.x, lastPos.y)
+          c2.line(pos.x, pos.y, lastPos.x, lastPos.y)
         }
         
-      } else {
+      } else if(check != 255 && drawing == true) {
         endShape()
-        beginShape()
+        drawing = false
       }
       
       lastPos = createVector(pos.x, pos.y)
@@ -366,5 +378,88 @@ function loopWisp(wt) {
     endShape()
   
   
+  
+}
+
+function loopNoise(loopDuration, scl, phs) {
+  loopDuration = 1000
+  fLooped = map(frameCount, 1, loopDuration, 0, 360)
+  xOff = map(cos(fLooped), -1, 1, 0, 1)
+  yOff = map(sin(fLooped), -1, 1, 0, 1)
+  n = noise(xOff*scl, yOff*scl, phs)
+  return n
+}
+
+function dotBG() {
+  setPen(thickBlack)
+  cols = 20//randomInt(50, 200)
+  rows = cols*ratio
+  cellW = (w-(marg*2))/cols 
+  cellH = (h-(marg*2))/rows
+  pts = []
+  for(let y = 0; y < rows-1; y++) {
+    for(let x = 0; x < cols; x++) {
+      here = createVector(marg+x*cellW+cellW/2, marg+y*cellH+cellH/2)
+      index = (y*rows)+x
+      
+      if(y%2 == 0) {
+        off = cellW*0.25
+      } else {
+        off = -cellW*0.25
+      }
+      check = c.get(here.x+off, here.y)[0]
+      if(check == 255) {
+        circle(here.x+off, here.y, 0)
+      }
+      // pts.push(here)
+      
+    }
+  }
+
+  // shuff(pts)
+
+  // for(let i = 1; i < pts.length; i++) {
+  //   plotLine(pts[i-1].x, pts[i-1].y, pts[i].x, pts[i].y, 255)
+  // }
+}
+
+function bgHatch() {
+  // setPen(black)
+  numWaves = 10
+  dens = h*30
+  beginShape()
+  for(let i = 0; i < dens; i++) {
+    freq = map(i, 0, dens, numWaves, 100)
+    sineI = map(i, 0, dens, 0, 360)
+    y = map(i, 0, dens, marg, h-marg)
+    x = map((sin((sineI*freq)-90)), -1, 1, marg, w-marg)
+
+    check = c.get(x, y)[0]
+    if(check == 255) {
+      curveVertex(x, y)
+    } else {
+      vertex(x, y)
+      endShape()
+      beginShape()
+      vertex(x, y)
+    }
+    
+  }
+  endShape()
+}
+
+function bgGrad(col1, col2) {
+  rows = 40
+  expo = 2
+  setPen(col1)
+  for(let y = 0; y < rows; y++) {
+    yNow = map(pow(y, expo), 0, pow(rows, expo), marg, h-marg)
+    plotLine(marg, yNow, w-marg, yNow, 255)
+  }
+  setPen(col2)
+  for(let y = 0; y < rows; y++) {
+    yNow = map(pow(y, expo), 0, pow(rows, expo), h-marg, marg)
+    plotLine(marg, yNow, w-marg, yNow, 255)
+  }
   
 }
