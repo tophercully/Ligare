@@ -56,6 +56,28 @@ function keyTyped() {
     window.location.reload();
   }
 }
+
+function mouseClicked() {
+  doubletap()
+}
+
+var mylatesttap;
+function doubletap() {
+
+   var now = new Date().getTime();
+   var timesince = now - mylatesttap;
+   if((timesince < 600) && (timesince > 0)){
+
+    // double tap   
+    save(pageWidth+'x'+pageHeight+fxhash)
+   }else{
+            // too much time to be a doubletap
+         }
+
+   mylatesttap = new Date().getTime();
+
+}
+
 function updateURLParameter(url, param, paramVal)
 {
     var TheAnchor = null;
