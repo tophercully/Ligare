@@ -78,6 +78,25 @@ function doubletap() {
 
 }
 
+
+
+var timeDown
+function touchEnded() {
+  timeDown = new Date().getTime()
+
+  
+}
+
+function touchStarted() {
+  now = new Date().getTime()
+
+  if(now-timeDown < 600) {
+    save(pageWidth+'x'+pageHeight+fxhash);
+
+  }
+}
+
+
 function updateURLParameter(url, param, paramVal)
 {
     var TheAnchor = null;
