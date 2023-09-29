@@ -55,6 +55,17 @@ function keyTyped() {
     window.history.replaceState('', '', updateURLParameter(window.location.href, "renderType", "1"));
     window.location.reload();
   }
+  if (key === "w" || key === "W") {
+    window.history.replaceState('', '', updateURLParameter(window.location.href, "pageWidth", "11"));
+    window.history.replaceState('', '', updateURLParameter(window.location.href, "pageHeight", "14"));
+    window.history.replaceState('', '', updateURLParameter(window.location.href, "marg", "25"));
+
+    window.location.reload();
+  }
+  if (key === "c" || key === "c") {
+    window.history.replaceState('', '', updateURLParameter(window.location.href, "penSize", "50"));
+    window.location.reload();
+  }
 }
 
 function mouseClicked() {
@@ -140,61 +151,6 @@ function updateURLParameter(url, param, paramVal)
 
     var rows_txt = temp + "" + param + "=" + paramVal;
     return baseURL + "?" + newAdditionalURL + rows_txt;
-}
-
-function reOrder() {
-  //find all paths
-
-  mainSVG = document.getElementsByTagName('svg')
-  paths = document.getElementsByTagName('path')
-
-  onlyG = document.getElementsByTagName("g")
-  //find folder paths are currently under
-  pathsFolder = paths[0].parentElement
-  folder = onlyG[0].parentElement
-  folder.setAttribute('xlmns', 'inkscape', '')
-  
-  folder.setAttribute('xlmns:inkscape', 'https://inkscape.org/namespaces/inkscape/')
-  layers = []
-  
-  //check against first color
-  for(let j = 0; j < plotPal.length; j++) {
-    layers[j] = document.createElement('g')
-    layers[j].setAttribute('id', 'layer'+(j+1))
-    // layers[j].setAttribute('inkScape', 'groupmode')
-    layers[j].setAttribute('inkscape:groupmode', 'layer')
-    layers[j].setAttribute('inkscape:label', plotPal[j].svgName)
-    // console.log(layers[j])
-    console.log(paths.length)
-    //call and format color for comparison
-    palCol = color(plotPal[j].hex)
-    palColFormatted = "rgb("+palCol.levels[0]+','+palCol.levels[1]+','+palCol.levels[2]+')'
-    
-    //check against each path
-    for(let i = 0; i < paths.length; i++) {
-      //read path color
-      col = paths[i].getAttribute("stroke")//Path color
-      
-      console.log(col, 'sample')
-      console.log(palColFormatted, 'target')
-      //sort colors into respective groups
-      if(col == palColFormatted) {
-        console.log('sorting')
-        layers[j].append(paths[i])
-        
-        
-      }
-      
-    }
-    
-  }
-
-  for(let i = 0; i < layers.length; i++) {
-    folder.append(layers[i])
-    console.log(folder)
-  }
-  
-  
 }
 
 function randColor() {
@@ -288,18 +244,16 @@ function randBool() {
 function setPen(pen) {
   penNow = pen
   stroke(chroma(pen.hex).alpha(pen.alpha).hex())
-  mmWt = mmToPx(pen.sz)
+  mmWt = mmToPx(penSize)
   strokeWeight(mmWt)
   slinkyGap = mmWt*0.75
 }
 ////////////////////////////////////////
-//leafWidA, widFreqA, widExpoA, coilComplexA, phaseXA, phaseYA, startAngA
-function loopWisp(wt) {
+function loopWisp(wt, seed) {
   if(frameCount == 1) {
     dens = loopDens
   startAng = startAng
-  pts = []
-  nWigs = []
+
   maxX = 0
   minX = 1
   maxY = 0
@@ -308,22 +262,17 @@ function loopWisp(wt) {
   maxWig = 0
   ns = coilComplex
   
-  rotNS = 3
+  rotNS = 2
   
-  nsWig = 1
-  phaseY = $fx.getParam('seed')//phaseYStart
-  phaseX = -$fx.getParam('seedB')//phaseXStart
+  nsWig = $fx.getParam('wiggleNS')
+  phaseY = $fx.getParam('seed')
+  phaseX = seed
   phaseWig = phaseWigStart
-  // thickness = wt/2
-  phaseTotal = wigglePhase//2
+  phaseTotal = wigglePhase
   phaseInc = phaseTotal/thickness
   
-  freq = widFreq//randomInt(1, 15)
-  c.strokeWeight(mmWt*padding)
-  c.stroke(0)
-  c.strokeCap(SQUARE)
-  // c2.strokeWeight(mmWt*c2Padding)
-  
+  freq = widFreq
+
   c2.stroke(0)
   c2.strokeCap(SQUARE)
   }
@@ -372,7 +321,6 @@ function loopWisp(wt) {
     for(let i = 0; i < dens+1; i++) {
       
       
-      // console.log(nWig)
       if(contained == true) {
         xPos = map(pts[i].x, minX, maxX, marg+wt, w-marg-wt)
         yPos = map(pts[i].y, minY, maxY, marg+wt, h-marg-wt)
@@ -404,12 +352,12 @@ function loopWisp(wt) {
       } else if(check == 255 && pos.x > marg*2 && pos.x < w-marg*2 && pos.y > marg*2 && pos.y < h-marg*2 && drawing == true) {
         vertex(pos.x, pos.y)
         if(i > 1) {
-          c.line(pos.x, pos.y, lastPos.x, lastPos.y)
           c2.line(pos.x, pos.y, lastPos.x, lastPos.y)
         }
         
       } else if(check != 255 && drawing == true) {
         endShape()
+        
         drawing = false
       }
       
@@ -429,78 +377,4 @@ function loopNoise(loopDuration, scl, phs) {
   yOff = map(sin(fLooped), -1, 1, 0, 1)
   n = noise(xOff*scl, yOff*scl, phs)
   return n
-}
-
-function dotBG() {
-  setPen(thickBlack)
-  cols = 20//randomInt(50, 200)
-  rows = cols*ratio
-  cellW = (w-(marg*2))/cols 
-  cellH = (h-(marg*2))/rows
-  pts = []
-  for(let y = 0; y < rows-1; y++) {
-    for(let x = 0; x < cols; x++) {
-      here = createVector(marg+x*cellW+cellW/2, marg+y*cellH+cellH/2)
-      index = (y*rows)+x
-      
-      if(y%2 == 0) {
-        off = cellW*0.25
-      } else {
-        off = -cellW*0.25
-      }
-      check = c.get(here.x+off, here.y)[0]
-      if(check == 255) {
-        circle(here.x+off, here.y, 0)
-      }
-      // pts.push(here)
-      
-    }
-  }
-
-  // shuff(pts)
-
-  // for(let i = 1; i < pts.length; i++) {
-  //   plotLine(pts[i-1].x, pts[i-1].y, pts[i].x, pts[i].y, 255)
-  // }
-}
-
-function bgHatch() {
-  // setPen(black)
-  numWaves = 10
-  dens = h*30
-  beginShape()
-  for(let i = 0; i < dens; i++) {
-    freq = map(i, 0, dens, numWaves, 100)
-    sineI = map(i, 0, dens, 0, 360)
-    y = map(i, 0, dens, marg, h-marg)
-    x = map((sin((sineI*freq)-90)), -1, 1, marg, w-marg)
-
-    check = c.get(x, y)[0]
-    if(check == 255) {
-      curveVertex(x, y)
-    } else {
-      vertex(x, y)
-      endShape()
-      beginShape()
-      vertex(x, y)
-    }
-    
-  }
-  endShape()
-}
-
-function bgGrad(col1, col2) {
-  rows = 40
-  expo = 2
-  setPen(col1)
-  for(let y = 0; y < rows; y++) {
-    yNow = map(pow(y, expo), 0, pow(rows, expo), marg, h-marg)
-    plotLine(marg, yNow, w-marg, yNow, 255)
-  }
-  setPen(col2)
-  for(let y = 0; y < rows; y++) {
-    yNow = map(pow(y, expo), 0, pow(rows, expo), h-marg, marg)
-    plotLine(marg, yNow, w-marg, yNow, 255)
-  }
-  
 }
